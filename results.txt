@@ -1,0 +1,51 @@
+# Specs
+
+Run with AMD Ryzen 5 7600 6-Core Processor in WSL2 Ubuntu 22.04
+
+
+# Round 1
+
+Sleep for 300ms
+2 workers
+
+Type     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /requests_async?seconds=0.3                                                      391     0(0.00%) |  11498     301   50918  10000 |    6.60        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /requests_sync?seconds=0.3                                                     14791     0(0.00%) |    373     301     556    310 |  246.55        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /requests_to_thread_async?seconds=0.3                                           6168     0(0.00%) |    890     302    1425    690 |  102.90        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /aiohttp_async?seconds=0.3                                                     18272     0(0.00%) |    302     300     410    300 |  304.41        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+
+aiohttp can handle ~20% more requests than requests in a sync context when the IO operation takes 300ms to complete.
+
+
+# Round 2
+
+Sleep for 50ms
+2 workers
+
+Type     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /requests_async?seconds=0.05                                                    4558     0(0.00%) |   1197      59    3408   1300 |   76.54        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /requests_sync?seconds=0.05                                                    93456     0(0.00%) |     59      51     176     57 | 1556.68        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /requests_to_thread_async?seconds=0.05                                         66789     0(0.00%) |     82      51     166     83 | 1113.16        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /aiohttp_async?seconds=0.05                                                   105184     0(0.00%) |     52      50     121     52 | 1753.13        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+
+aiohttp can handle ~10% more requests than requests in a sync context when the IO operation takes 50ms to complete.
+
+
+# Conclusions
+
+It looks like the longer the IO operation takes to complete the more beneficial it is to use async. Although sync can perfectly keep up with its async counterpart.
+
+What looks like a horrible idea is to use a sync operation in an async context as we can see with /requests_async. 
+If there's no async alternative, it is worth it to go out of our way and use asyncio.to_thread to wrap the sync opration.
+
+This tests assume every library is going to have the same behaviour as requests. Further tests with other libraries should be performed to corroborate this behaviour.

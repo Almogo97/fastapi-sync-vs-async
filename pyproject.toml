@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "asd"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.0"
+requests = "^2.32.3"
+aiohttp = "^3.9.5"
+
+
+[tool.poetry.group.dev.dependencies]
+locust = "^2.29.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.locust]
+host = "http://localhost:8001"
+users = 100
+spawn-rate = 10
+run-time = "1m"
